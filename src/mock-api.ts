@@ -463,7 +463,7 @@ export function setupMockApi() {
           })
         }
 
-        return jsonResponse(animal, 21)
+        return jsonResponse(animal, 201)
       }
 
       // 5. ANIMAIS INDIVIDUAL ENDPOINTS (GET, PUT, DELETE)
