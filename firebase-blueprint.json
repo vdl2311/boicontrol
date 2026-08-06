@@ -1,0 +1,167 @@
+{
+  "entities": {
+    "fazenda": {
+      "title": "Fazenda",
+      "description": "Fazenda cadastrada",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nome": { "type": "string" },
+        "cidade": { "type": "string" },
+        "estado": { "type": "string" },
+        "areaTotal": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "nome"]
+    },
+    "animal": {
+      "title": "Animal",
+      "description": "Animal/bovino cadastrado na fazenda",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "identificacao": { "type": "string" },
+        "nome": { "type": "string" },
+        "especie": { "type": "string" },
+        "raca": { "type": "string" },
+        "sexo": { "type": "string" },
+        "dataNascimento": { "type": "string" },
+        "pesoInicial": { "type": "number" },
+        "pesoAtual": { "type": "number" },
+        "status": { "type": "string" },
+        "categoria": { "type": "string" },
+        "cor": { "type": "string" },
+        "fotoUrl": { "type": "string" },
+        "observacoes": { "type": "string" },
+        "origem": { "type": "string" },
+        "dataEntrada": { "type": "string" },
+        "paiId": { "type": "string" },
+        "maeId": { "type": "string" },
+        "fazendaId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "identificacao", "sexo", "categoria", "status", "fazendaId"]
+    },
+    "saude": {
+      "title": "Saude",
+      "description": "Registro de saúde e manejo sanitário",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "animalId": { "type": "string" },
+        "tipo": { "type": "string" },
+        "descricao": { "type": "string" },
+        "produto": { "type": "string" },
+        "dosagem": { "type": "string" },
+        "veterinario": { "type": "string" },
+        "custo": { "type": "number" },
+        "dataAplicacao": { "type": "string" },
+        "proximaDose": { "type": "string" },
+        "observacoes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "animalId", "tipo", "descricao"]
+    },
+    "pesagem": {
+      "title": "Pesagem",
+      "description": "Registro de pesagem do animal",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "animalId": { "type": "string" },
+        "peso": { "type": "number" },
+        "data": { "type": "string" },
+        "observacoes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "animalId", "peso"]
+    },
+    "alimentacao": {
+      "title": "Alimentacao",
+      "description": "Registro de alimentação ou trato nutricional",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "animalId": { "type": "string" },
+        "lote": { "type": "string" },
+        "tipoRacao": { "type": "string" },
+        "quantidade": { "type": "number" },
+        "custoUnitario": { "type": "number" },
+        "dataInicio": { "type": "string" },
+        "dataFim": { "type": "string" },
+        "observacoes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "tipoRacao", "quantidade"]
+    },
+    "reproducao": {
+      "title": "Reproducao",
+      "description": "Registro de reprodução, monta ou cobertura",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "femeaId": { "type": "string" },
+        "touroId": { "type": "string" },
+        "tipo": { "type": "string" },
+        "dataMonta": { "type": "string" },
+        "dataPrevistaParto": { "type": "string" },
+        "dataParto": { "type": "string" },
+        "status": { "type": "string" },
+        "resultado": { "type": "string" },
+        "observacoes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "femeaId", "tipo", "status"]
+    },
+    "transacao": {
+      "title": "Transacao",
+      "description": "Transação financeira da fazenda",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tipo": { "type": "string" },
+        "categoria": { "type": "string" },
+        "descricao": { "type": "string" },
+        "valor": { "type": "number" },
+        "data": { "type": "string" },
+        "animalId": { "type": "string" },
+        "fazendaId": { "type": "string" },
+        "observacoes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "tipo", "categoria", "descricao", "valor", "fazendaId"]
+    }
+  },
+  "firestore": {
+    "fazendas": {
+      "schema": "fazenda",
+      "description": "Collection of all farm entities"
+    },
+    "animais": {
+      "schema": "animal",
+      "description": "Collection of all animal entities"
+    },
+    "saudes": {
+      "schema": "saude",
+      "description": "Collection of all health records"
+    },
+    "pesagens": {
+      "schema": "pesagem",
+      "description": "Collection of all weight records"
+    },
+    "alimentacoes": {
+      "schema": "alimentacao",
+      "description": "Collection of all nutrition records"
+    },
+    "reproducoes": {
+      "schema": "reproducao",
+      "description": "Collection of all reproduction records"
+    },
+    "transacoes": {
+      "schema": "transacao",
+      "description": "Collection of all transaction records"
+    }
+  }
+}

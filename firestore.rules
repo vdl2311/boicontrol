@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    match /fazendas/{fazendaId} {
+      allow read, write: if true;
+    }
+
+    match /animais/{animalId} {
+      allow read, write: if true;
+    }
+
+    match /saudes/{saudeId} {
+      allow read, write: if true;
+    }
+
+    match /pesagens/{pesagemId} {
+      allow read, write: if true;
+    }
+
+    match /alimentacoes/{alimentacaoId} {
+      allow read, write: if true;
+    }
+
+    match /reproducoes/{reproducaoId} {
+      allow read, write: if true;
+    }
+
+    match /transacoes/{transacaoId} {
+      allow read, write: if true;
+    }
+  }
+}

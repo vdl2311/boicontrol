@@ -1,0 +1,137 @@
+// Schema Pecuária de Corte - BoiControl
+// Banco de dados estruturado para gestão completa de gado
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Fazenda {
+  id        String   @id @default(cuid())
+  nome      String
+  cidade    String?
+  estado    String?
+  areaTotal Float?   // hectares
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  animais     Animal[]
+  transacoes  Transacao[]
+}
+
+model Animal {
+  id            String   @id @default(cuid())
+  identificacao String   @unique // brinco, número ou microchip
+  nome          String?
+  especie       String   @default("Bovino")
+  raca          String?  // Nelore, Angus, Girolanda, etc.
+  sexo          String   @default("Macho") // Macho / Fêmea
+  dataNascimento DateTime?
+  pesoInicial   Float?   // kg na entrada
+  pesoAtual     Float?   // kg atualizado
+  status        String   @default("Ativo") // Ativo, Vendido, Abatido, Óbito
+  categoria     String   @default("Corte") // Corte, Reprodução, Bezerra, Bezerro, Novilha, Vaca, Touro
+  cor           String?
+  fotoUrl       String?
+  observacoes   String?
+  origem        String?  // compra, nascimento na fazenda
+  dataEntrada   DateTime @default(now())
+  paiId         String?  // genealogia
+  maeId         String?  // genealogia
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  fazendaId     String
+
+  fazenda       Fazenda  @relation(fields: [fazendaId], references: [id], onDelete: Cascade)
+  pai           Animal?  @relation("GenealogiaPai", fields: [paiId], references: [id])
+  mae           Animal?  @relation("GenealogiaMae", fields: [maeId], references: [id])
+  filhosPai     Animal[] @relation("GenealogiaPai")
+  filhosMae     Animal[] @relation("GenealogiaMae")
+
+  registrosSaude    Saude[]
+  registrosPeso     Pesagem[]
+  registrosAlimentacao Alimentacao[]
+  montas            Reproducao[] @relation("ReproducaoFemea")
+  coberturas        Reproducao[] @relation("ReproducaoTouro")
+  transacoes        Transacao[]
+}
+
+model Saude {
+  id          String   @id @default(cuid())
+  animalId    String
+  tipo        String   // Vacina, Vermífugo, Tratamento, Exame, Cirurgia
+  descricao   String
+  produto     String?  // nome do medicamento/vacina
+  dosagem     String?
+  veterinario String?
+  custo       Float?   @default(0)
+  dataAplicacao DateTime @default(now())
+  proximaDose DateTime? // para controle de revacinação
+  observacoes String?
+  createdAt   DateTime @default(now())
+
+  animal      Animal   @relation(fields: [animalId], references: [id], onDelete: Cascade)
+}
+
+model Pesagem {
+  id        String   @id @default(cuid())
+  animalId  String
+  peso      Float    // kg
+  data      DateTime @default(now())
+  observacoes String?
+  createdAt DateTime @default(now())
+
+  animal    Animal   @relation(fields: [animalId], references: [id], onDelete: Cascade)
+}
+
+model Alimentacao {
+  id          String   @id @default(cuid())
+  animalId    String?
+  lote        String?  // grupo/lote de animais
+  tipoRacao   String   // Sal Mineral, Silagem, Concentrado, Feno, Pasto
+  quantidade  Float    // kg/dia
+  custoUnitario Float? // R$ por kg
+  dataInicio  DateTime @default(now())
+  dataFim     DateTime?
+  observacoes String?
+  createdAt   DateTime @default(now())
+
+  animal      Animal?  @relation(fields: [animalId], references: [id], onDelete: Cascade)
+}
+
+model Reproducao {
+  id            String   @id @default(cuid())
+  femeaId       String
+  touroId       String?
+  tipo          String   @default("Monta Natural") // Monta Natural, Inseminação, Transferência de Embriões
+  dataMonta     DateTime @default(now())
+  dataPrevistaParto DateTime? // ~285 dias após monta
+  dataParto     DateTime?
+  status        String   @default("Gestante") // Coberta, Gestante, Parida, Vazia, Diagnóstico
+  resultado     String?  // sucesso/aborto/natimorto
+  observacoes   String?
+  createdAt     DateTime @default(now())
+
+  femea         Animal   @relation("ReproducaoFemea", fields: [femeaId], references: [id], onDelete: Cascade)
+  touro         Animal?  @relation("ReproducaoTouro", fields: [touroId], references: [id], onDelete: SetNull)
+}
+
+model Transacao {
+  id          String   @id @default(cuid())
+  tipo        String   // Receita, Despesa
+  categoria   String   // Venda de Animal, Compra de Insumo, Vacina, Ração, Combustível, Manutenção, Salário, Outro
+  descricao   String
+  valor       Float
+  data        DateTime @default(now())
+  animalId    String?  // se relacionado a um animal específico
+  fazendaId   String
+  observacoes String?
+  createdAt   DateTime @default(now())
+
+  animal      Animal?  @relation(fields: [animalId], references: [id], onDelete: SetNull)
+  fazenda     Fazenda  @relation(fields: [fazendaId], references: [id], onDelete: Cascade)
+}
