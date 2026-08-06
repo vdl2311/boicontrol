@@ -418,11 +418,24 @@ export function setupMockApi() {
           filtered = filtered.filter((a: any) => a.categoria === categoria)
         }
 
-        // Add count
+        const [allSaude, allPesagem] = await Promise.all([
+          db.saude.findMany(),
+          db.pesagem.findMany(),
+        ])
+        const saudeCountMap = new Map<string, number>()
+        for (const s of allSaude) {
+          if (s.animalId) saudeCountMap.set(s.animalId, (saudeCountMap.get(s.animalId) || 0) + 1)
+        }
+        const pesagemCountMap = new Map<string, number>()
+        for (const p of allPesagem) {
+          if (p.animalId) pesagemCountMap.set(p.animalId, (pesagemCountMap.get(p.animalId) || 0) + 1)
+        }
+
         for (const a of filtered) {
-          const saudesCount = await db.saude.count({ where: { animalId: a.id } })
-          const pesagensCount = await db.pesagem.count({ where: { animalId: a.id } })
-          a._count = { registrosSaude: saudesCount, registrosPeso: pesagensCount }
+          a._count = {
+            registrosSaude: saudeCountMap.get(a.id) || 0,
+            registrosPeso: pesagemCountMap.get(a.id) || 0,
+          }
         }
 
         return jsonResponse(filtered, 200)
@@ -475,38 +488,41 @@ export function setupMockApi() {
           const animal = await db.animal.findUnique({ where: { id } })
           if (!animal) return jsonResponse({ error: 'Animal não encontrado' }, 404)
 
-          const allAnimais = await db.animal.findMany()
+          const [allAnimais, registrosSaude, registrosPeso, registrosAlimentacao, montas, coberturas, transacoes] = await Promise.all([
+            db.animal.findMany(),
+            db.saude.findMany({ where: { animalId: id } }),
+            db.pesagem.findMany({ where: { animalId: id } }),
+            db.alimentacao.findMany({ where: { animalId: id } }),
+            db.reproducao.findMany({ where: { femeaId: id } }),
+            db.reproducao.findMany({ where: { touroId: id } }),
+            db.transacao.findMany({ where: { animalId: id } }),
+          ])
+
           const pai = animal.paiId ? allAnimais.find((a: any) => a.id === animal.paiId) : null
           const mae = animal.maeId ? allAnimais.find((a: any) => a.id === animal.maeId) : null
           const filhosPai = allAnimais.filter((a: any) => a.paiId === id)
           const filhosMae = allAnimais.filter((a: any) => a.maeId === id)
 
-          const registrosSaude = await db.saude.findMany({ where: { animalId: id } })
           registrosSaude.sort((a: any, b: any) => new Date(b.dataAplicacao).getTime() - new Date(a.dataAplicacao).getTime())
-
-          const registrosPeso = await db.pesagem.findMany({ where: { animalId: id } })
-          registrosPeso.sort((a: any, b: any) => new Date(a.data).getTime() - new Date(b.data).getTime())
-
-          const registrosAlimentacao = await db.alimentacao.findMany({ where: { animalId: id } })
+          registrosPeso.sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())
           registrosAlimentacao.sort((a: any, b: any) => new Date(b.dataInicio).getTime() - new Date(a.dataInicio).getTime())
 
-          const montas = await db.reproducao.findMany({ where: { femeaId: id } })
+          const animalMap = new Map(allAnimais.map((a: any) => [a.id, a]))
+
           for (const m of montas) {
             if (m.touroId) {
-              m.touro = allAnimais.find((a: any) => a.id === m.touroId) || null
+              m.touro = animalMap.get(m.touroId) || null
             }
           }
           montas.sort((a: any, b: any) => new Date(b.dataMonta).getTime() - new Date(a.dataMonta).getTime())
 
-          const coberturas = await db.reproducao.findMany({ where: { touroId: id } })
           for (const c of coberturas) {
             if (c.femeaId) {
-              c.femea = allAnimais.find((a: any) => a.id === c.femeaId) || null
+              c.femea = animalMap.get(c.femeaId) || null
             }
           }
           coberturas.sort((a: any, b: any) => new Date(b.dataMonta).getTime() - new Date(a.dataMonta).getTime())
 
-          const transacoes = await db.transacao.findMany({ where: { animalId: id } })
           transacoes.sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())
 
           return jsonResponse({
@@ -558,10 +574,14 @@ export function setupMockApi() {
         const where: any = {}
         if (animalId) where.animalId = animalId
 
-        const registros = await db.saude.findMany({ where })
+        const [registros, animais] = await Promise.all([
+          db.saude.findMany({ where }),
+          db.animal.findMany(),
+        ])
+        const animalMap = new Map(animais.map((a: any) => [a.id, a]))
         for (const r of registros) {
           if (r.animalId) {
-            r.animal = await db.animal.findUnique({ where: { id: r.animalId } })
+            r.animal = animalMap.get(r.animalId) || null
           }
         }
         registros.sort((a: any, b: any) => new Date(b.dataAplicacao).getTime() - new Date(a.dataAplicacao).getTime())
@@ -619,10 +639,14 @@ export function setupMockApi() {
         const where: any = {}
         if (animalId) where.animalId = animalId
 
-        const registros = await db.pesagem.findMany({ where })
+        const [registros, animais] = await Promise.all([
+          db.pesagem.findMany({ where }),
+          db.animal.findMany(),
+        ])
+        const animalMap = new Map(animais.map((a: any) => [a.id, a]))
         for (const r of registros) {
           if (r.animalId) {
-            r.animal = await db.animal.findUnique({ where: { id: r.animalId } })
+            r.animal = animalMap.get(r.animalId) || null
           }
         }
         registros.sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())
@@ -659,10 +683,14 @@ export function setupMockApi() {
 
       // 8. ALIMENTACAO LIST & CREATE & INDIVIDUAL
       if (pathname === '/api/alimentacao' && method === 'GET') {
-        const registros = await db.alimentacao.findMany()
+        const [registros, animais] = await Promise.all([
+          db.alimentacao.findMany(),
+          db.animal.findMany(),
+        ])
+        const animalMap = new Map(animais.map((a: any) => [a.id, a]))
         for (const r of registros) {
           if (r.animalId) {
-            r.animal = await db.animal.findUnique({ where: { id: r.animalId } })
+            r.animal = animalMap.get(r.animalId) || null
           }
         }
         registros.sort((a: any, b: any) => new Date(b.dataInicio).getTime() - new Date(a.dataInicio).getTime())
@@ -719,13 +747,17 @@ export function setupMockApi() {
         const where: any = {}
         if (status && status !== 'todos') where.status = status
 
-        const registros = await db.reproducao.findMany({ where })
+        const [registros, animais] = await Promise.all([
+          db.reproducao.findMany({ where }),
+          db.animal.findMany(),
+        ])
+        const animalMap = new Map(animais.map((a: any) => [a.id, a]))
         for (const r of registros) {
           if (r.femeaId) {
-            r.femea = await db.animal.findUnique({ where: { id: r.femeaId } })
+            r.femea = animalMap.get(r.femeaId) || null
           }
           if (r.touroId) {
-            r.touro = await db.animal.findUnique({ where: { id: r.touroId } })
+            r.touro = animalMap.get(r.touroId) || null
           }
         }
         registros.sort((a: any, b: any) => new Date(b.dataMonta).getTime() - new Date(a.dataMonta).getTime())
@@ -783,10 +815,14 @@ export function setupMockApi() {
         const where: any = {}
         if (tipo && tipo !== 'todos') where.tipo = tipo
 
-        const transacoes = await db.transacao.findMany({ where })
+        const [transacoes, animais] = await Promise.all([
+          db.transacao.findMany({ where }),
+          db.animal.findMany(),
+        ])
+        const animalMap = new Map(animais.map((a: any) => [a.id, a]))
         for (const t of transacoes) {
           if (t.animalId) {
-            t.animal = await db.animal.findUnique({ where: { id: t.animalId } })
+            t.animal = animalMap.get(t.animalId) || null
           }
         }
         transacoes.sort((a: any, b: any) => new Date(b.data).getTime() - new Date(a.data).getTime())

@@ -77,7 +77,11 @@ export function AnimaisModule() {
   }
 
   useEffect(() => {
-    const t = setTimeout(load, 300)
+    if (!search) {
+      load()
+      return
+    }
+    const t = setTimeout(load, 150)
     return () => clearTimeout(t)
   }, [search, filterSexo, filterStatus, filterCategoria, refreshKey])
 
