@@ -1,6 +1,6 @@
 {
-  "name": "",
-  "description": "",
+  "name": "BoiControl",
+  "description": "Plataforma de gestão pecuária e controle de gado",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
